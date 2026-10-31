@@ -1,1 +1,850 @@
-<h1>Ironline</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Ironline - Switchyard</title>
+<style>
+  :root{
+    --bg:#101216; --panel:#181b21; --ink:#e8e2d4; --mut:#9a917e;
+    --brass:#d9a441; --rust:#c1553b; --verdigris:#3fa08a; --ember:#ff7a2f;
+    --line:#2b2f37;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+    font-family:Georgia,'Times New Roman',serif; overscroll-behavior:none;}
+  body{display:flex;flex-direction:column;align-items:center;min-height:100dvh;}
+  #hud{width:100%;max-width:560px;display:flex;align-items:center;gap:10px;
+    padding:10px 14px;background:var(--panel);border-bottom:2px solid var(--brass);}
+  #hud .title{font-size:20px;letter-spacing:.18em;color:var(--brass);font-weight:bold;}
+  #hud .stat{font-size:13px;color:var(--mut);letter-spacing:.06em;}
+  #hud .stat b{color:var(--ink);font-size:15px;}
+  #strikes{display:flex;gap:4px;align-items:center;}
+  .pip{width:12px;height:12px;border-radius:50%;border:2px solid var(--rust);background:transparent;}
+  .pip.hit{background:var(--rust);}
+  #hud .spacer{flex:1;}
+  .iconbtn{min-width:48px;min-height:48px;border:2px solid var(--line);border-radius:10px;
+    background:#20242c;color:var(--ink);font-size:20px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;touch-action:manipulation;}
+  .iconbtn:active{background:#2b303a;}
+  #stage{position:relative;width:100%;max-width:560px;}
+  canvas{display:block;width:100%;height:auto;touch-action:manipulation;cursor:pointer;
+    background:radial-gradient(120% 90% at 50% 0%, #171a20 0%, #0e1013 70%);}
+  #toast{position:absolute;left:50%;top:12px;transform:translateX(-50%);
+    background:rgba(10,11,14,.85);border:1px solid var(--brass);color:var(--ink);
+    padding:6px 14px;border-radius:20px;font-size:14px;letter-spacing:.08em;
+    opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;}
+  #toast.show{opacity:1;}
+  #hint{width:100%;max-width:560px;padding:8px 14px 14px;color:var(--mut);font-size:13px;
+    letter-spacing:.04em;text-align:center;}
+  .screen{position:fixed;inset:0;background:rgba(8,9,12,.92);display:flex;
+    align-items:center;justify-content:center;z-index:10;padding:20px;}
+  .screen[hidden]{display:none;}
+  .card{background:var(--panel);border:2px solid var(--brass);border-radius:14px;
+    padding:28px 24px;max-width:420px;width:100%;text-align:center;
+    box-shadow:0 0 60px rgba(217,164,65,.12);}
+  .card h1{margin:0 0 6px;font-size:34px;letter-spacing:.22em;color:var(--brass);}
+  .card h2{margin:0 0 12px;font-size:22px;letter-spacing:.14em;color:var(--brass);}
+  .card p{color:var(--mut);font-size:15px;line-height:1.55;margin:8px 0;}
+  .card p b{color:var(--ink);}
+  .card .big{font-size:44px;color:var(--ink);margin:10px 0;letter-spacing:.06em;}
+  .btn{display:block;width:100%;min-height:56px;margin:10px 0 0;border:none;border-radius:12px;
+    background:var(--brass);color:#14100a;font-family:inherit;font-size:17px;font-weight:bold;
+    letter-spacing:.12em;cursor:pointer;touch-action:manipulation;}
+  .btn:active{transform:scale(.98);}
+  .btn.ghost{background:transparent;border:2px solid var(--line);color:var(--ink);}
+  .legend{display:flex;justify-content:center;gap:18px;margin:12px 0 4px;flex-wrap:wrap;}
+  .legend span{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mut);letter-spacing:.08em;}
+  .dot{width:14px;height:14px;border-radius:50%;}
+  kbd{font-family:inherit;}
+  @media (prefers-reduced-motion: reduce){
+    #toast{transition:none;}
+    .btn:active{transform:none;}
+  }
+</style>
+</head>
+<body>
+  <div id="hud">
+    <div class="title">IRONLINE</div>
+    <div class="stat">SCORE <b id="score">0</b></div>
+    <div class="stat">TRAIN <b><span id="trainN">0</span>/10</b></div>
+    <div id="strikes" aria-label="strikes"><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+    <div class="spacer"></div>
+    <button class="iconbtn" id="soundBtn" aria-label="toggle sound">&#9836;</button>
+    <button class="iconbtn" id="pauseBtn" aria-label="pause">&#10074;&#10074;</button>
+  </div>
+  <div id="stage">
+    <canvas id="game" width="720" height="860" aria-label="rail switchyard"></canvas>
+    <div id="toast"></div>
+  </div>
+  <div id="hint">Tap a switch to throw it. Never throw a switch under a train.</div>
+
+  <div class="screen" id="startScreen">
+    <div class="card">
+      <h1>IRONLINE</h1>
+      <p>A dieselpunk switchyard. Ten trains a shift, three platforms, three switches. Throw the switches, mind the timing.</p>
+      <div class="legend">
+        <span><span class="dot" style="background:#d9a441"></span>BRASS</span>
+        <span><span class="dot" style="background:#c1553b"></span>RUST</span>
+        <span><span class="dot" style="background:#3fa08a"></span>VERDIGRIS</span>
+      </div>
+      <p>Match each train to its platform color. <b>Three wrecks ends the shift.</b> A switch glows red while a train is on it: throwing it then wrecks the train.</p>
+      <button class="btn" id="dayBtn">DAY SHIFT<br><small style="font-weight:normal;letter-spacing:.06em">the fixed schedule, learn it cold</small></button>
+      <button class="btn ghost" id="nightBtn">NIGHT SHIFT<br><small style="font-weight:normal;letter-spacing:.06em">a new seeded yard every day</small></button>
+    </div>
+  </div>
+
+  <div class="screen" id="pauseScreen" hidden>
+    <div class="card">
+      <h2>HELD</h2>
+      <p>The yard waits. No train moves while you are away.</p>
+      <button class="btn" id="resumeBtn">RESUME</button>
+      <button class="btn ghost" id="quitBtn">END SHIFT</button>
+    </div>
+  </div>
+
+  <div class="screen" id="endScreen" hidden>
+    <div class="card">
+      <h2 id="endTitle">SHIFT COMPLETE</h2>
+      <div class="big" id="endScore">0</div>
+      <p id="endDetail"></p>
+      <p id="endBest"></p>
+      <button class="btn" id="againBtn">NEXT SHIFT</button>
+      <button class="btn ghost" id="menuBtn">YARD OFFICE</button>
+    </div>
+  </div>
+<script>
+/* === CORE START ===
+   Pure simulation: no DOM, no audio. Shared with the node harness.
+   Switchyard model: 2 entries (A top, B bottom), 3 switches, 3 platforms.
+*/
+(function(global){
+'use strict';
+var IL = {};
+IL.SPEED = 150;
+IL.TRAIN_HIT = 42;      // train-train collision distance
+IL.SWITCH_WRECK_R = 50; // flip wrecks a train within this radius
+IL.SWITCH_WARN_R = 78;  // red glow radius
+
+IL.SWITCHES = [
+  {id:'S1', x:180, y:250, states:['straight','diverge']},
+  {id:'S2', x:180, y:650, states:['straight','diverge']},
+  {id:'S3', x:540, y:450, states:['up','straight','down']}
+];
+IL.PLATFORMS = {
+  brass:     {key:'brass',     x:620, y:250, color:'#d9a441', name:'BRASS'},
+  rust:      {key:'rust',      x:620, y:450, color:'#c1553b', name:'RUST'},
+  verdigris: {key:'verdigris', x:620, y:650, color:'#3fa08a', name:'VERDIGRIS'}
+};
+IL.SEGS = {
+  entryA:      {pts:[[-60,250],[180,250]], from:'entryA', to:'S1'},
+  entryB:      {pts:[[-60,650],[180,650]], from:'entryB', to:'S2'},
+  s1straight: {pts:[[180,250],[620,250]], from:'S1', to:'brass'},
+  s1div:       {pts:[[180,250],[190,330],[235,410],[300,440],[360,450]], from:'S1', to:'mid'},
+  s2straight: {pts:[[180,650],[620,650]], from:'S2', to:'verdigris'},
+  s2div:       {pts:[[180,650],[190,570],[235,490],[300,460],[360,450]], from:'S2', to:'mid'},
+  mid:         {pts:[[360,450],[540,450]], from:'mid', to:'S3'},
+  s3up:        {pts:[[540,450],[575,375],[620,250]], from:'S3', to:'brass'},
+  s3straight:  {pts:[[540,450],[620,450]], from:'S3', to:'rust'},
+  s3down:      {pts:[[540,450],[575,525],[620,650]], from:'S3', to:'verdigris'}
+};
+IL.BRANCH = {
+  S1: ['s1straight','s1div'],
+  S2: ['s2straight','s2div'],
+  S3: ['s3up','s3straight','s3down']
+};
+IL.ROUTE_SETTINGS = {
+  A: {brass:{S1:0}, rust:{S1:1,S3:1}, verdigris:{S1:1,S3:2}},
+  B: {brass:{S2:1,S3:0}, rust:{S2:1,S3:1}, verdigris:{S2:0}}
+};
+IL.DEFAULT_SWITCHES = {S1:0, S2:0, S3:1};
+
+function segLen(pts){
+  var L=0;
+  for(var i=1;i<pts.length;i++){
+    var dx=pts[i][0]-pts[i-1][0], dy=pts[i][1]-pts[i-1][1];
+    L+=Math.sqrt(dx*dx+dy*dy);
+  }
+  return L;
+}
+IL.segLen = function(segKey){ return segLen(IL.SEGS[segKey].pts); };
+
+function pointAt(pts, d){
+  var acc=0;
+  for(var i=1;i<pts.length;i++){
+    var dx=pts[i][0]-pts[i-1][0], dy=pts[i][1]-pts[i-1][1];
+    var L=Math.sqrt(dx*dx+dy*dy);
+    if(acc+L>=d || i===pts.length-1){
+      var f=L>0?(d-acc)/L:0; f=Math.max(0,Math.min(1,f));
+      return {x:pts[i-1][0]+dx*f, y:pts[i-1][1]+dy*f,
+              ang:Math.atan2(dy,dx)};
+    }
+    acc+=L;
+  }
+  var n=pts.length-1;
+  return {x:pts[n][0], y:pts[n][1], ang:0};
+}
+IL.pointAt = pointAt;
+
+function switchDef(id){
+  for(var i=0;i<IL.SWITCHES.length;i++) if(IL.SWITCHES[i].id===id) return IL.SWITCHES[i];
+  return null;
+}
+IL.switchDef = switchDef;
+
+/* Full waypoint path for an entry under fixed settings (oracle + tests). */
+IL.fullPath = function(entry, settings){
+  var pts=[];
+  var segKey = entry==='A' ? 'entryA' : 'entryB';
+  while(segKey){
+    var seg=IL.SEGS[segKey];
+    for(var i=(pts.length?1:0);i<seg.pts.length;i++) pts.push(seg.pts[i]);
+    var to=seg.to;
+    if(IL.PLATFORMS[to]) break;
+    if(to==='mid'){ segKey='mid'; continue; }
+    var st = (settings && settings[to]!==undefined) ? settings[to] : IL.DEFAULT_SWITCHES[to];
+    segKey = IL.BRANCH[to][st];
+  }
+  return pts;
+};
+IL.pathEndPlatform = function(entry, settings){
+  var pts=IL.fullPath(entry, settings);
+  var p=pts[pts.length-1];
+  var best=null, bd=1e9;
+  Object.keys(IL.PLATFORMS).forEach(function(k){
+    var pl=IL.PLATFORMS[k];
+    var d=Math.hypot(p[0]-pl.x, p[1]-pl.y);
+    if(d<bd){bd=d;best=k;}
+  });
+  return bd<30 ? best : null;
+};
+/* Arc length along a waypoint path to the point nearest (x,y). */
+IL.distAlong = function(pts, x, y){
+  var acc=0, best=1e9, bestD=0;
+  for(var i=1;i<pts.length;i++){
+    var ax=pts[i-1][0], ay=pts[i-1][1], bx=pts[i][0], by=pts[i][1];
+    var dx=bx-ax, dy=by-ay, L=Math.sqrt(dx*dx+dy*dy);
+    var t=L>0?((x-ax)*dx+(y-ay)*dy)/(L*L):0; t=Math.max(0,Math.min(1,t));
+    var px=ax+dx*t, py=ay+dy*t;
+    var d=Math.hypot(x-px,y-py);
+    if(d<best){best=d;bestD=acc+L*t;}
+    acc+=L;
+  }
+  return bestD;
+};
+
+IL.createSim = function(shift){
+  return {
+    shift:shift, time:0, spawnIdx:0,
+    switches:{S1:IL.DEFAULT_SWITCHES.S1, S2:IL.DEFAULT_SWITCHES.S2, S3:IL.DEFAULT_SWITCHES.S3},
+    trains:[], score:0, strikes:0, correct:0, resolved:0,
+    events:[], over:false, failed:false, nextId:1
+  };
+};
+
+function trainPos(t){
+  var acc=0;
+  for(var i=0;i<t.segs.length;i++){
+    var seg=IL.SEGS[t.segs[i]];
+    var L=segLen(seg.pts);
+    if(i===t.segI){
+      var p=pointAt(seg.pts, Math.min(t.segD,L));
+      return p;
+    }
+    acc+=L;
+  }
+  var last=IL.SEGS[t.segs[t.segs.length-1]].pts;
+  var n=last.length-1;
+  return {x:last[n][0], y:last[n][1], ang:0};
+}
+IL.trainPos = trainPos;
+
+function wreckTrain(sim, t, cause){
+  if(t.state!=='run') return;
+  t.state='wreck';
+  sim.strikes++;
+  sim.resolved++;
+  sim.events.push({t:'wreck', train:t, cause:cause});
+  if(sim.strikes>=3){ sim.over=true; sim.failed=true; sim.events.push({t:'shiftEnd', failed:true}); }
+}
+
+IL.flip = function(sim, id){
+  var def=switchDef(id);
+  if(!def || sim.over) return 'noop';
+  for(var i=0;i<sim.trains.length;i++){
+    var t=sim.trains[i];
+    if(t.state!=='run') continue;
+    var p=trainPos(t);
+    if(Math.hypot(p.x-def.x, p.y-def.y) < IL.SWITCH_WRECK_R){
+      wreckTrain(sim, t, 'switch');
+      sim.events.push({t:'flipWreck', sw:id});
+      return 'wreck';
+    }
+  }
+  sim.switches[id]=(sim.switches[id]+1)%def.states.length;
+  sim.events.push({t:'flip', sw:id, state:sim.switches[id]});
+  return 'ok';
+};
+
+IL.step = function(sim, dt){
+  if(sim.over) return;
+  sim.time+=dt;
+  while(sim.spawnIdx<sim.shift.length && sim.shift[sim.spawnIdx].t<=sim.time){
+    var s=sim.shift[sim.spawnIdx++];
+    sim.trains.push({id:sim.nextId++, entry:s.entry, dest:s.dest,
+      segs:[s.entry==='A'?'entryA':'entryB'], segI:0, segD:0, state:'run'});
+    sim.events.push({t:'spawn', train:sim.trains[sim.trains.length-1]});
+  }
+  var i, t;
+  for(i=0;i<sim.trains.length;i++){
+    t=sim.trains[i];
+    if(t.state!=='run') continue;
+    t.segD+=IL.SPEED*dt;
+    var guard=0;
+    while(guard++<12){
+      var seg=IL.SEGS[t.segs[t.segI]];
+      var L=segLen(seg.pts);
+      if(t.segD<L) break;
+      t.segD-=L;
+      var to=seg.to;
+      if(IL.PLATFORMS[to]){
+        t.state='done'; sim.resolved++;
+        if(to===t.dest){ sim.score+=10; sim.correct++; sim.events.push({t:'arrive', train:t}); }
+        else sim.events.push({t:'misroute', train:t, at:to});
+        break;
+      } else if(to==='mid'){
+        t.segs.push('mid'); t.segI++;
+      } else { /* switch */
+        var br=IL.BRANCH[to][sim.switches[to]];
+        t.segs.push(br); t.segI++;
+        sim.events.push({t:'pass', train:t, sw:to});
+      }
+    }
+  }
+  /* train-train collisions */
+  var running=sim.trains.filter(function(x){return x.state==='run';});
+  var positions=running.map(function(x){return {t:x, p:trainPos(x)};});
+  var wrecked=false;
+  for(i=0;i<positions.length && !wrecked;i++){
+    for(var j=i+1;j<positions.length;j++){
+      var a=positions[i], b=positions[j];
+      if(Math.hypot(a.p.x-b.p.x, a.p.y-b.p.y) < IL.TRAIN_HIT){
+        wreckTrain(sim, a.t, 'collision');
+        wreckTrain(sim, b.t, 'collision');
+        wrecked=true; break;
+      }
+    }
+  }
+  sim.trains=sim.trains.filter(function(x){return x.state==='run';});
+  if(!sim.over && sim.spawnIdx>=sim.shift.length && sim.trains.length===0){
+    sim.over=true; sim.events.push({t:'shiftEnd', failed:false});
+  }
+};
+
+/* Oracle: perfect-timing switch play. Returns {score,strikes} or null if infeasible. */
+IL.oracleSolve = function(shift){
+  var flips=[]; /* {time, sw, state, passage} */
+  var planned={S1:IL.DEFAULT_SWITCHES.S1, S2:IL.DEFAULT_SWITCHES.S2, S3:IL.DEFAULT_SWITCHES.S3};
+  for(var i=0;i<shift.length;i++){
+    var s=shift[i];
+    var settings=IL.ROUTE_SETTINGS[s.entry][s.dest];
+    var pts=IL.fullPath(s.entry, settings);
+    Object.keys(settings).forEach(function(sw){
+      var def=switchDef(sw);
+      var d=IL.distAlong(pts, def.x, def.y);
+      var passage=s.t + d/IL.SPEED;
+      if(planned[sw]!==settings[sw]){
+        flips.push({time:passage-0.9, sw:sw, state:settings[sw], passage:passage});
+        planned[sw]=settings[sw];
+      }
+    });
+  }
+  /* feasibility: consecutive flips on one switch need clear windows */
+  var bySw={};
+  flips.forEach(function(f){ (bySw[f.sw]=bySw[f.sw]||[]).push(f); });
+  var ok=true;
+  Object.keys(bySw).forEach(function(sw){
+    var arr=bySw[sw].sort(function(a,b){return a.passage-b.passage;});
+    for(var k=1;k<arr.length;k++){
+      if(arr[k].passage - arr[k-1].passage < 1.5) ok=false;
+    }
+  });
+  if(!ok) return null;
+  var sim=IL.createSim(shift);
+  flips.sort(function(a,b){return a.time-b.time;});
+  var fi=0, dt=1/60, guard=0;
+  while(!sim.over && guard++<60000){
+    while(fi<flips.length && flips[fi].time<=sim.time){
+      var f=flips[fi++];
+      /* zone must be clear for a safe throw */
+      var clear=true;
+      for(var q=0;q<sim.trains.length;q++){
+        var tt=sim.trains[q];
+        if(tt.state!=='run') continue;
+        var p=trainPos(tt), def=switchDef(f.sw);
+        if(Math.hypot(p.x-def.x,p.y-def.y) < IL.SWITCH_WRECK_R+25){ clear=false; break; }
+      }
+      if(!clear) return null;
+      sim.switches[f.sw]=f.state;
+      sim.events.push({t:'flip', sw:f.sw, state:f.state});
+    }
+    IL.step(sim, dt);
+  }
+  return {score:sim.score, strikes:sim.strikes};
+};
+
+IL.FIXED_SHIFT = [
+  {t:0,  entry:'A', dest:'brass'},
+  {t:6,  entry:'B', dest:'verdigris'},
+  {t:12, entry:'A', dest:'rust'},
+  {t:18, entry:'B', dest:'rust'},
+  {t:24, entry:'A', dest:'verdigris'},
+  {t:30, entry:'B', dest:'brass'},
+  {t:36, entry:'A', dest:'rust'},
+  {t:42, entry:'B', dest:'verdigris'},
+  {t:48, entry:'A', dest:'brass'},
+  {t:54, entry:'B', dest:'rust'}
+];
+
+IL.mulberry32 = function(a){
+  return function(){
+    a|=0; a=a+0x6D2B79F5|0;
+    var t=Math.imul(a^a>>>15, 1|a);
+    t=t+Math.imul(t^t>>>7, 61|t)^t;
+    return ((t^t>>>14)>>>0)/4294967296;
+  };
+};
+function hashStr(s){
+  var h=2166136261;
+  for(var i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); }
+  return h>>>0;
+}
+IL.hashStr = hashStr;
+
+/* Seeded daily shift. Validated solvable by the oracle; falls back to fixed. */
+IL.genDailyShift = function(dateStr){
+  var seed=hashStr(dateStr||'1970-01-01');
+  for(var attempt=0; attempt<200; attempt++){
+    var rng=IL.mulberry32((seed + attempt*101)>>>0);
+    var dests=['brass','brass','rust','rust','verdigris','verdigris'];
+    var extra=['brass','rust','verdigris'];
+    for(var k=0;k<4;k++) dests.push(extra[(rng()*3)|0]);
+    for(var i=dests.length-1;i>0;i--){
+      var j=(rng()*(i+1))|0, tmp=dests[i]; dests[i]=dests[j]; dests[j]=tmp;
+    }
+    var shift=[], t=0, entry=rng()<0.5?'A':'B';
+    for(var n=0;n<10;n++){
+      shift.push({t:t, entry:entry, dest:dests[n]});
+      entry = entry==='A'?'B':'A';
+      t += 4.5 + rng()*2;
+    }
+    var res=IL.oracleSolve(shift);
+    if(res && res.score===100 && res.strikes===0) return {shift:shift, seed:(seed+attempt*101)>>>0};
+  }
+  return {shift:IL.FIXED_SHIFT.map(function(s){return {t:s.t,entry:s.entry,dest:s.dest};}), seed:0};
+};
+
+if(typeof module!=='undefined' && module.exports) module.exports=IL;
+else global.IL=IL;
+})(typeof window!=='undefined'?window:this);
+/* === CORE END === */
+</script>
+<script>
+(function(){
+'use strict';
+/* ---------- persistence ---------- */
+var store={
+  get:function(k,d){ try{var v=localStorage.getItem(k); return v===null?d:v;}catch(e){return d;} },
+  set:function(k,v){ try{localStorage.setItem(k,v);}catch(e){} }
+};
+/* ---------- audio: all synthesized ---------- */
+var AU={
+  ctx:null, master:null, rumbleGain:null, on:store.get('il-sound','1')==='1',
+  init:function(){
+    if(this.ctx) return;
+    var C=window.AudioContext||window.webkitAudioContext; if(!C) return;
+    this.ctx=new C(); this.master=this.ctx.createGain();
+    this.master.gain.value=0.5; this.master.connect(this.ctx.destination);
+    var len=this.ctx.sampleRate*2, buf=this.ctx.createBuffer(1,len,this.ctx.sampleRate), d=buf.getChannelData(0);
+    var last=0;
+    for(var i=0;i<len;i++){ var w=Math.random()*2-1; last=(last+0.02*w)/1.02; d[i]=last*3.2; }
+    this.noiseBuf=buf;
+    var src=this.ctx.createBufferSource(); src.buffer=buf; src.loop=true;
+    var lp=this.ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=110;
+    this.rumbleGain=this.ctx.createGain(); this.rumbleGain.gain.value=0;
+    src.connect(lp); lp.connect(this.rumbleGain); this.rumbleGain.connect(this.master);
+    src.start();
+  },
+  resume:function(){ if(this.ctx&&this.ctx.state==='suspended') this.ctx.resume(); },
+  setOn:function(v){ this.on=v; store.set('il-sound',v?'1':'0');
+    if(this.rumbleGain) this.rumbleGain.gain.value=0; },
+  env:function(g,t0,a,peak,dur){ g.gain.setValueAtTime(0.0001,t0); g.gain.linearRampToValueAtTime(peak,t0+a); g.gain.exponentialRampToValueAtTime(0.0001,t0+dur); },
+  tone:function(freq,type,dur,peak,slideTo,delay){
+    if(!this.on||!this.ctx) return;
+    var t0=this.ctx.currentTime+(delay||0);
+    var o=this.ctx.createOscillator(), g=this.ctx.createGain();
+    o.type=type; o.frequency.setValueAtTime(freq,t0);
+    if(slideTo) o.frequency.exponentialRampToValueAtTime(slideTo,t0+dur);
+    this.env(g,t0,0.01,peak,dur);
+    o.connect(g); g.connect(this.master); o.start(t0); o.stop(t0+dur+0.05);
+  },
+  noise:function(dur,peak,fType,fFreq,delay){
+    if(!this.on||!this.ctx) return;
+    var t0=this.ctx.currentTime+(delay||0);
+    var s=this.ctx.createBufferSource(); s.buffer=this.noiseBuf; s.loop=true;
+    var f=this.ctx.createBiquadFilter(); f.type=fType; f.frequency.value=fFreq;
+    var g=this.ctx.createGain(); this.env(g,t0,0.005,peak,dur);
+    s.connect(f); f.connect(g); g.connect(this.master); s.start(t0); s.stop(t0+dur+0.05);
+  },
+  clunk:function(){ this.noise(0.07,0.5,'lowpass',500); this.tone(95,'square',0.1,0.25,55); },
+  click:function(){ this.noise(0.04,0.10,'highpass',2500); },
+  whistle:function(){ this.tone(622,'sine',0.4,0.10); this.tone(466,'sine',0.5,0.10,null,0.35); },
+  chime:function(){ this.tone(784,'triangle',0.5,0.16); this.tone(1175,'triangle',0.6,0.10,null,0.06); },
+  buzz:function(){ this.tone(130,'sawtooth',0.3,0.14,90); },
+  clang:function(){ this.noise(0.7,0.5,'highpass',700); this.tone(196,'square',0.6,0.20,120); this.tone(277,'square',0.5,0.14,150,0.03); },
+  setRumble:function(n){
+    if(!this.ctx||!this.rumbleGain) return;
+    var target=this.on?Math.min(0.06,0.012+0.012*n):0;
+    this.rumbleGain.gain.setTargetAtTime(target,this.ctx.currentTime,0.4);
+  }
+};
+/* ---------- canvas ---------- */
+var canvas=document.getElementById('game');
+var ctx=canvas.getContext('2d');
+var W=720, H=860;
+var reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function strokePoly(g,pts){
+  g.beginPath(); g.moveTo(pts[0][0],pts[0][1]);
+  for(var i=1;i<pts.length;i++) g.lineTo(pts[i][0],pts[i][1]);
+  g.stroke();
+}
+function offsetPoly(pts,off){
+  var out=[];
+  for(var i=0;i<pts.length;i++){
+    var p0=pts[Math.max(0,i-1)], p1=pts[Math.min(pts.length-1,i+1)];
+    var dx=p1[0]-p0[0], dy=p1[1]-p0[1], L=Math.hypot(dx,dy)||1;
+    out.push([pts[i][0]-dy/L*off, pts[i][1]+dx/L*off]);
+  }
+  return out;
+}
+function walkTies(g,pts){
+  var acc=0,next=8;
+  for(var i=1;i<pts.length;i++){
+    var ax=pts[i-1][0],ay=pts[i-1][1],bx=pts[i][0],by=pts[i][1];
+    var dx=bx-ax,dy=by-ay,L=Math.hypot(dx,dy);
+    if(L===0) continue;
+    var nx=-dy/L, ny=dx/L;
+    while(acc+next<acc+L){
+      var f=(next)/L, px=ax+dx*f, py=ay+dy*f;
+      g.beginPath(); g.moveTo(px-nx*8,py-ny*8); g.lineTo(px+nx*8,py+ny*8); g.stroke();
+      next+=16;
+    }
+    next-=L; acc+=L;
+  }
+}
+/* static layer: ballast, ties, rails, platforms */
+var staticC=document.createElement('canvas'); staticC.width=W; staticC.height=H;
+(function buildStatic(){
+  var g=staticC.getContext('2d');
+  g.fillStyle='#101216'; g.fillRect(0,0,W,H);
+  g.fillStyle='rgba(255,255,255,0.02)';
+  for(var ry=40;ry<H;ry+=80) for(var rx=20;rx<W;rx+=80){ g.beginPath(); g.arc(rx,ry,2,0,7); g.fill(); }
+  var keys=Object.keys(IL.SEGS);
+  g.lineCap='round'; g.lineJoin='round';
+  keys.forEach(function(k){
+    var pts=IL.SEGS[k].pts;
+    g.strokeStyle='#22262d'; g.lineWidth=15; strokePoly(g,pts);
+  });
+  g.strokeStyle='#17191e'; g.lineWidth=13;
+  keys.forEach(function(k){ walkTies(g,IL.SEGS[k].pts); });
+  g.strokeStyle='#7d8590'; g.lineWidth=2.6;
+  keys.forEach(function(k){
+    var pts=IL.SEGS[k].pts;
+    strokePoly(g,offsetPoly(pts,5)); strokePoly(g,offsetPoly(pts,-5));
+  });
+  /* platforms */
+  Object.keys(IL.PLATFORMS).forEach(function(k){
+    var p=IL.PLATFORMS[k];
+    g.save(); g.translate(p.x,p.y);
+    g.fillStyle=p.color; g.globalAlpha=0.9;
+    g.fillRect(-6,-26,12,52);
+    g.globalAlpha=1; g.strokeStyle=p.color; g.lineWidth=3;
+    g.beginPath(); g.arc(0,-44,10,0,7); g.stroke();
+    g.fillStyle=p.color;
+    if(k==='brass'){ g.beginPath(); g.arc(0,-44,5,0,7); g.fill(); }
+    else if(k==='rust'){ g.beginPath(); g.moveTo(0,-50); g.lineTo(6,-38); g.lineTo(-6,-38); g.closePath(); g.fill(); }
+    else { g.fillRect(-5,-49,10,10); }
+    g.font='bold 19px Georgia,serif'; g.textAlign='center';
+    g.fillText(p.name,0,-62);
+    g.restore();
+  });
+  /* entry labels */
+  g.font='bold 20px Georgia,serif'; g.textAlign='left'; g.fillStyle='#5a6068';
+  g.fillText('A',14,258); g.fillText('B',14,658);
+  g.font='15px Georgia,serif'; g.fillStyle='#3d4249';
+  g.fillText('YARD 7 - NIGHT AND DAY',14,830);
+})();
+
+function branchAngle(swId,stateIdx){
+  var seg=IL.SEGS[IL.BRANCH[swId][stateIdx]];
+  var p0=seg.pts[0], p1=seg.pts[1];
+  return Math.atan2(p1[1]-p0[1],p1[0]-p0[0]);
+}
+/* ---------- game state ---------- */
+var G={
+  mode:'menu', sim:null, shiftMode:'day',
+  particles:[], popups:[], shakeT:0,
+  paused:false, best:parseInt(store.get('il-best','0'),10)||0,
+  shifts:parseInt(store.get('il-shifts','0'),10)||0
+};
+var toastEl=document.getElementById('toast'), toastTimer=null;
+function toast(msg){
+  toastEl.textContent=msg; toastEl.classList.add('show');
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){toastEl.classList.remove('show');},1600);
+}
+function updateHUD(){
+  document.getElementById('score').textContent=G.sim?G.sim.score:0;
+  document.getElementById('trainN').textContent=G.sim?G.sim.resolved:0;
+  var pips=document.querySelectorAll('#strikes .pip');
+  var st=G.sim?G.sim.strikes:0;
+  pips.forEach(function(p,i){ p.classList.toggle('hit',i<st); });
+}
+function todayStr(){
+  var d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function startShift(mode){
+  G.shiftMode=mode;
+  var shift = mode==='day'
+    ? IL.FIXED_SHIFT.map(function(s){return {t:s.t,entry:s.entry,dest:s.dest};})
+    : IL.genDailyShift(todayStr()).shift;
+  G.sim=IL.createSim(shift);
+  G.particles=[]; G.popups=[]; G.shakeT=0; G.paused=false;
+  document.getElementById('startScreen').hidden=true;
+  document.getElementById('endScreen').hidden=true;
+  document.getElementById('pauseScreen').hidden=true;
+  updateHUD();
+  toast(mode==='day'?'DAY SHIFT: 10 TRAINS':'NIGHT SHIFT: SEEDED YARD');
+}
+function endShift(){
+  var sim=G.sim, failed=sim.failed;
+  document.getElementById('endTitle').textContent=failed?'WRECK ON THE LINE':'SHIFT COMPLETE';
+  document.getElementById('endScore').textContent=sim.score;
+  document.getElementById('endDetail').textContent=
+    sim.correct+' of 10 routed true'+(failed?' - the shift was lost':'')+'.';
+  if(!failed){
+    G.shifts++; store.set('il-shifts',String(G.shifts));
+    if(sim.score>G.best){ G.best=sim.score; store.set('il-best',String(G.best)); }
+  }
+  document.getElementById('endBest').textContent=
+    'Best shift: '+G.best+' - Shifts worked: '+G.shifts;
+  document.getElementById('endScreen').hidden=false;
+  AU.setRumble(0);
+}
+function addShake(m){ if(!reduced) G.shakeT=Math.max(G.shakeT,m); }
+function burst(x,y,color,n,spd){
+  if(reduced) n=Math.min(n,4);
+  for(var i=0;i<n;i++){
+    var a=Math.random()*Math.PI*2, s=spd*(0.4+Math.random()*0.8);
+    G.particles.push({x:x,y:y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-30,life:0.7+Math.random()*0.5,color:color});
+  }
+}
+function popup(x,y,text,color){ G.popups.push({x:x,y:y,text:text,life:1.4,color:color||'#e8e2d4'}); }
+
+function drainEvents(){
+  var sim=G.sim; if(!sim) return;
+  sim.events.forEach(function(e){
+    if(e.t==='spawn'){ AU.whistle(); }
+    else if(e.t==='pass'){ AU.click(); }
+    else if(e.t==='arrive'){
+      AU.chime(); var p=IL.trainPos(e.train);
+      burst(p.x,p.y,'#d9a441',10,90); popup(p.x,p.y-34,'+10','#d9a441');
+    }
+    else if(e.t==='misroute'){ AU.buzz(); var p2=IL.trainPos(e.train); popup(p2.x,p2.y-34,'MISROUTED','#c1553b'); }
+    else if(e.t==='wreck'){
+      AU.clang(); addShake(0.5); var p3=IL.trainPos(e.train);
+      burst(p3.x,p3.y,'#ff7a2f',26,190); burst(p3.x,p3.y,'#3a3f47',14,120);
+      popup(p3.x,p3.y-40,'WRECK','#ff7a2f');
+    }
+    else if(e.t==='flip'){ AU.clunk(); }
+    else if(e.t==='shiftEnd'){ endShift(); }
+  });
+  sim.events.length=0;
+  updateHUD();
+  var running=sim.trains.filter(function(t){return t.state==='run';}).length;
+  AU.setRumble(running);
+}
+/* ---------- input ---------- */
+function canvasTap(cx,cy){
+  if(!G.sim||G.sim.over||G.paused) return;
+  var r=canvas.getBoundingClientRect();
+  var x=(cx-r.left)/r.width*W, y=(cy-r.top)/r.height*H;
+  for(var i=0;i<IL.SWITCHES.length;i++){
+    var sw=IL.SWITCHES[i];
+    if(Math.hypot(x-sw.x,y-sw.y)<48){
+      var before=G.sim.switches[sw.id];
+      var res=IL.flip(G.sim,sw.id);
+      if(res==='ok'){
+        var st=IL.SWITCHES[i].states[G.sim.switches[sw.id]];
+        toast(sw.id+' -> '+st.toUpperCase());
+      } else if(res==='wreck'){
+        toast('THROWN UNDER A TRAIN');
+      }
+      drainEvents();
+      return;
+    }
+  }
+}
+canvas.addEventListener('pointerdown',function(e){ AU.init(); AU.resume(); canvasTap(e.clientX,e.clientY); });
+canvas.oncontextmenu=function(){return false;};
+/* ---------- render ---------- */
+function drawSwitch(g,sw,state,danger){
+  var ang=branchAngle(sw.id,state);
+  g.save(); g.translate(sw.x,sw.y);
+  if(danger && !reduced){
+    var pl=0.5+0.5*Math.sin(performance.now()/120);
+    g.strokeStyle='rgba(255,60,40,'+(0.5+0.5*pl)+')'; g.lineWidth=5;
+    g.beginPath(); g.arc(0,0,30+4*pl,0,7); g.stroke();
+  } else if(danger){
+    g.strokeStyle='rgba(255,60,40,0.8)'; g.lineWidth=5;
+    g.beginPath(); g.arc(0,0,30,0,7); g.stroke();
+  }
+  /* active branch glow */
+  var seg=IL.SEGS[IL.BRANCH[sw.id][state]];
+  g.save();
+  g.strokeStyle='rgba(255,122,47,0.85)'; g.lineWidth=7; g.lineCap='round';
+  if(!reduced){ g.shadowColor='#ff7a2f'; g.shadowBlur=14; }
+  g.beginPath();
+  var pts=seg.pts, acc=0;
+  g.moveTo(pts[0][0]-sw.x,pts[0][1]-sw.y);
+  for(var i=1;i<pts.length && acc<130;i++){
+    var dx=pts[i][0]-pts[i-1][0], dy=pts[i][1]-pts[i-1][1], L=Math.hypot(dx,dy);
+    if(acc+L>130){ var f=(130-acc)/L; g.lineTo(pts[i-1][0]+dx*f-sw.x,pts[i-1][1]+dy*f-sw.y); break; }
+    g.lineTo(pts[i][0]-sw.x,pts[i][1]-sw.y); acc+=L;
+  }
+  g.stroke(); g.restore();
+  /* lever */
+  g.fillStyle='#101216'; g.beginPath(); g.arc(0,0,20,0,7); g.fill();
+  g.strokeStyle='#d9a441'; g.lineWidth=3; g.beginPath(); g.arc(0,0,20,0,7); g.stroke();
+  g.strokeStyle='#d9a441'; g.lineWidth=6; g.lineCap='round';
+  g.beginPath(); g.moveTo(0,0); g.lineTo(Math.cos(ang)*16,Math.sin(ang)*16); g.stroke();
+  g.fillStyle='#ff7a2f'; g.beginPath(); g.arc(Math.cos(ang)*16,Math.sin(ang)*16,4,0,7); g.fill();
+  g.restore();
+}
+function drawSigil(g,k,x,y,r,color){
+  g.fillStyle=color;
+  if(k==='brass'){ g.beginPath(); g.arc(x,y,r*0.55,0,7); g.fill(); }
+  else if(k==='rust'){ g.beginPath(); g.moveTo(x,y-r*0.6); g.lineTo(x+r*0.6,y+r*0.5); g.lineTo(x-r*0.6,y+r*0.5); g.closePath(); g.fill(); }
+  else { g.fillRect(x-r*0.5,y-r*0.5,r,r); }
+}
+function drawTrain(g,t){
+  var p=IL.trainPos(t);
+  var pl=IL.PLATFORMS[t.dest];
+  g.save(); g.translate(p.x,p.y); g.rotate(p.ang);
+  g.fillStyle='rgba(0,0,0,0.45)'; g.fillRect(-24,-10,50,26);
+  g.fillStyle='#23262c';
+  g.beginPath();
+  if(g.roundRect) g.roundRect(-23,-12,46,24,6); else g.rect(-23,-12,46,24);
+  g.fill();
+  g.strokeStyle='#4a5058'; g.lineWidth=2; g.stroke();
+  g.fillStyle=pl.color; g.fillRect(-23,-12,10,24);
+  drawSigil(g,t.dest,8,0,11,'rgba(255,255,255,0.92)');
+  g.fillStyle='#ffe9b0'; g.beginPath(); g.arc(24,0,3.5,0,7); g.fill();
+  g.restore();
+  g.font='bold 17px Georgia,serif'; g.textAlign='center';
+  g.fillStyle='rgba(0,0,0,0.6)'; g.fillText(pl.name,p.x+1,p.y-21);
+  g.fillStyle=pl.color; g.fillText(pl.name,p.x,p.y-22);
+}
+function render(){
+  ctx.save();
+  if(G.shakeT>0 && !reduced){
+    var m=G.shakeT*10;
+    ctx.translate((Math.random()-0.5)*m,(Math.random()-0.5)*m);
+  }
+  ctx.drawImage(staticC,0,0);
+  var sim=G.sim;
+  if(sim){
+    var running=sim.trains.filter(function(t){return t.state==='run';});
+    IL.SWITCHES.forEach(function(sw){
+      var danger=false;
+      for(var i=0;i<running.length;i++){
+        var p=IL.trainPos(running[i]);
+        if(Math.hypot(p.x-sw.x,p.y-sw.y)<IL.SWITCH_WARN_R){ danger=true; break; }
+      }
+      drawSwitch(ctx,sw,sim.switches[sw.id],danger);
+    });
+    running.forEach(function(t){ drawTrain(ctx,t); });
+  } else {
+    IL.SWITCHES.forEach(function(sw){ drawSwitch(ctx,sw,IL.DEFAULT_SWITCHES[sw.id],false); });
+  }
+  /* particles */
+  G.particles.forEach(function(p){
+    ctx.globalAlpha=Math.max(0,p.life);
+    ctx.fillStyle=p.color;
+    ctx.fillRect(p.x-2,p.y-2,4,4);
+  });
+  ctx.globalAlpha=1;
+  /* popups */
+  ctx.textAlign='center'; ctx.font='bold 20px Georgia,serif';
+  G.popups.forEach(function(p){
+    ctx.globalAlpha=Math.min(1,p.life);
+    ctx.fillStyle=p.color; ctx.fillText(p.text,p.x,p.y);
+  });
+  ctx.globalAlpha=1;
+  ctx.restore();
+}
+/* ---------- main loop ---------- */
+var last=0;
+function loop(now){
+  requestAnimationFrame(loop);
+  var dt=Math.min(0.05,(now-last)/1000||0); last=now;
+  var sim=G.sim;
+  if(sim && !sim.over && !G.paused && G.mode!=='menu'){
+    IL.step(sim,dt);
+    drainEvents();
+  }
+  /* particles & popups always animate */
+  G.particles.forEach(function(p){ p.x+=p.vx*dt; p.y+=p.vy*dt; p.vy+=160*dt; p.life-=dt; });
+  G.particles=G.particles.filter(function(p){return p.life>0;});
+  G.popups.forEach(function(p){ p.y-=34*dt; p.life-=dt*0.7; });
+  G.popups=G.popups.filter(function(p){return p.life>0;});
+  if(G.shakeT>0) G.shakeT=Math.max(0,G.shakeT-dt*1.6);
+  render();
+}
+/* ---------- ui wiring ---------- */
+function setPaused(v){
+  if(!G.sim||G.sim.over) return;
+  G.paused=v;
+  document.getElementById('pauseScreen').hidden=!v;
+  if(v) AU.setRumble(0);
+}
+document.getElementById('dayBtn').onclick=function(){ AU.init(); AU.resume(); G.mode='play'; startShift('day'); };
+document.getElementById('nightBtn').onclick=function(){ AU.init(); AU.resume(); G.mode='play'; startShift('night'); };
+document.getElementById('pauseBtn').onclick=function(){ setPaused(true); };
+document.getElementById('resumeBtn').onclick=function(){ setPaused(false); };
+document.getElementById('quitBtn').onclick=function(){
+  document.getElementById('pauseScreen').hidden=true;
+  G.mode='menu'; G.sim=null; G.paused=false;
+  document.getElementById('startScreen').hidden=false; updateHUD();
+};
+document.getElementById('againBtn').onclick=function(){ G.mode='play'; startShift(G.shiftMode); };
+document.getElementById('menuBtn').onclick=function(){
+  document.getElementById('endScreen').hidden=true;
+  G.mode='menu'; G.sim=null;
+  document.getElementById('startScreen').hidden=false; updateHUD();
+};
+var soundBtn=document.getElementById('soundBtn');
+function paintSound(){ soundBtn.style.opacity=AU.on?'1':'0.35'; }
+soundBtn.onclick=function(){ AU.init(); AU.setOn(!AU.on); paintSound(); toast(AU.on?'SOUND ON':'SOUND OFF'); };
+paintSound();
+document.addEventListener('visibilitychange',function(){
+  if(document.hidden && G.mode==='play') setPaused(true);
+});
+updateHUD();
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
