@@ -21,7 +21,7 @@ try {
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
     font-family:Georgia,'Times New Roman',serif; overscroll-behavior:none;}
-  body{display:flex;flex-direction:column;align-items:center;min-height:100dvh;}
+  body{display:flex;flex-direction:column;align-items:center;min-height:100vh;min-height:100dvh;}
   #hud{width:100%;max-width:560px;display:flex;align-items:center;gap:10px;
     padding:10px 14px;background:var(--panel);border-bottom:2px solid var(--brass);}
   #hud .title{font-size:20px;letter-spacing:.18em;color:var(--brass);font-weight:bold;}
@@ -43,7 +43,7 @@ try {
     padding:6px 14px;border-radius:20px;font-size:14px;letter-spacing:.08em;
     opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;}
   #toast.show{opacity:1;}
-  #hint{width:100%;max-width:560px;padding:8px 14px 14px;color:var(--mut);font-size:13px;
+  #hint{width:100%;max-width:560px;padding:8px 14px calc(14px + env(safe-area-inset-bottom));color:var(--mut);font-size:13px;
     letter-spacing:.04em;text-align:center;}
   .screen{position:fixed;inset:0;background:rgba(8,9,12,.92);display:flex;
     align-items:center;justify-content:center;z-index:10;padding:20px;}
