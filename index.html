@@ -14,17 +14,17 @@ try {
 <title>Ironline - Switchyard</title>
 <style>
   :root{
-    --bg:#101216; --panel:#181b21; --ink:#e8e2d4; --mut:#9a917e;
-    --brass:#d9a441; --rust:#c1553b; --verdigris:#3fa08a; --ember:#ff7a2f;
-    --line:#2b2f37;
+    --bg:#030d09; --panel:#071a12; --ink:#eafff5; --mut:#8fb8a4;
+    --brass:#e8c66a; --rust:#e5484d; --verdigris:#2ee6a8; --ember:#2ee6a8;
+    --line:#123527;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
-    font-family:Georgia,'Times New Roman',serif; overscroll-behavior:none;}
+    font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; overscroll-behavior:none;}
   body{display:flex;flex-direction:column;align-items:center;min-height:100vh;min-height:100dvh;}
-  #hud{width:100%;max-width:560px;display:flex;align-items:center;gap:10px;
-    padding:10px 14px;background:var(--panel);border-bottom:2px solid var(--brass);}
-  #hud .title{font-size:20px;letter-spacing:.18em;color:var(--brass);font-weight:bold;}
+  #hud{width:100%;display:flex;align-items:center;gap:10px;
+    padding:10px 14px;background:var(--panel);border-bottom:2px solid var(--verdigris);}
+  #hud .title{font-size:20px;letter-spacing:.18em;color:var(--verdigris);font-weight:bold;}
   #hud .stat{font-size:13px;color:var(--mut);letter-spacing:.06em;}
   #hud .stat b{color:var(--ink);font-size:15px;}
   #strikes{display:flex;gap:4px;align-items:center;}
@@ -32,25 +32,25 @@ try {
   .pip.hit{background:var(--rust);}
   #hud .spacer{flex:1;}
   .iconbtn{min-width:48px;min-height:48px;border:2px solid var(--line);border-radius:10px;
-    background:#20242c;color:var(--ink);font-size:20px;cursor:pointer;
+    background:#0a2016;color:var(--ink);font-size:20px;cursor:pointer;
     display:flex;align-items:center;justify-content:center;touch-action:manipulation;}
-  .iconbtn:active{background:#2b303a;}
-  #stage{position:relative;width:100%;max-width:560px;}
+  .iconbtn:active{background:#123527;}
+  #stage{position:relative;width:100%;}
   canvas{display:block;width:100%;height:auto;touch-action:manipulation;cursor:pointer;
-    background:radial-gradient(120% 90% at 50% 0%, #171a20 0%, #0e1013 70%);}
+    background:radial-gradient(120% 90% at 50% 0%, #06231a 0%, #030d09 70%);}
   #toast{position:absolute;left:50%;top:12px;transform:translateX(-50%);
     background:rgba(10,11,14,.85);border:1px solid var(--brass);color:var(--ink);
     padding:6px 14px;border-radius:20px;font-size:14px;letter-spacing:.08em;
     opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;}
   #toast.show{opacity:1;}
-  #hint{width:100%;max-width:560px;padding:8px 14px calc(14px + env(safe-area-inset-bottom));color:var(--mut);font-size:13px;
+  #hint{width:100%;padding:8px 14px 34px;padding-bottom:max(34px, calc(14px + env(safe-area-inset-bottom)));color:var(--mut);font-size:13px;
     letter-spacing:.04em;text-align:center;}
-  .screen{position:fixed;inset:0;background:rgba(8,9,12,.92);display:flex;
+  .screen{position:fixed;inset:0;background:rgba(2,8,5,.92);display:flex;
     align-items:center;justify-content:center;z-index:10;padding:20px;}
   .screen[hidden]{display:none;}
   .card{background:var(--panel);border:2px solid var(--brass);border-radius:14px;
     padding:28px 24px;max-width:420px;width:100%;text-align:center;
-    box-shadow:0 0 60px rgba(217,164,65,.12);}
+    box-shadow:0 0 60px rgba(46,230,168,.12);}
   .card h1{margin:0 0 6px;font-size:34px;letter-spacing:.22em;color:var(--brass);}
   .card h2{margin:0 0 12px;font-size:22px;letter-spacing:.14em;color:var(--brass);}
   .card p{color:var(--mut);font-size:15px;line-height:1.55;margin:8px 0;}
@@ -115,7 +115,7 @@ html,body{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;us
     <button class="iconbtn" id="pauseBtn" aria-label="pause">&#10074;&#10074;</button>
   </div>
   <div id="stage">
-    <canvas id="game" width="720" height="860" aria-label="rail switchyard"></canvas>
+    <canvas id="game" width="720" height="1240" aria-label="rail switchyard"></canvas>
     <div id="toast"></div>
   </div>
   <div id="hint">Tap a switch to throw it. Never throw a switch under a train.</div>
@@ -123,11 +123,11 @@ html,body{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;us
   <div class="screen" id="startScreen">
     <div class="card">
       <h1>IRONLINE</h1>
-      <p>A dieselpunk switchyard. Ten trains a shift, three platforms, three switches. Throw the switches, mind the timing.</p>
+      <p>A jade-lit switchyard. Ten trains a shift, three platforms, three switches. Throw the switches, mind the timing.</p>
       <div class="legend">
-        <span><span class="dot" style="background:#d9a441"></span>BRASS</span>
-        <span><span class="dot" style="background:#c1553b"></span>RUST</span>
-        <span><span class="dot" style="background:#3fa08a"></span>VERDIGRIS</span>
+        <span><span class="dot" style="background:#e8c66a"></span>BRASS</span>
+        <span><span class="dot" style="background:#e5484d"></span>RUST</span>
+        <span><span class="dot" style="background:#2ee6a8"></span>VERDIGRIS</span>
       </div>
       <p>Match each train to its platform color. <b>Three wrecks ends the shift.</b> A switch glows red while a train is on it: throwing it then wrecks the train.</p>
       <button class="btn" id="dayBtn">DAY SHIFT<br><small style="font-weight:normal;letter-spacing:.06em">the fixed schedule, learn it cold</small></button>
@@ -162,32 +162,32 @@ html,body{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;us
 (function(global){
 'use strict';
 var IL = {};
-IL.SPEED = 150;
-IL.TRAIN_HIT = 42;      // train-train collision distance
-IL.SWITCH_WRECK_R = 50; // flip wrecks a train within this radius
-IL.SWITCH_WARN_R = 78;  // red glow radius
+IL.SPEED = 240;
+IL.TRAIN_HIT = 50;      // train-train collision distance
+IL.SWITCH_WRECK_R = 60; // flip wrecks a train within this radius
+IL.SWITCH_WARN_R = 90;  // red glow radius
 
 IL.SWITCHES = [
-  {id:'S1', x:180, y:250, states:['straight','diverge']},
-  {id:'S2', x:180, y:650, states:['straight','diverge']},
-  {id:'S3', x:540, y:450, states:['up','straight','down']}
+  {id:'S1', x:210, y:426, states:['straight','diverge']},
+  {id:'S2', x:546, y:426, states:['straight','diverge']},
+  {id:'S3', x:378, y:1020, states:['left','straight','right']}
 ];
 IL.PLATFORMS = {
-  brass:     {key:'brass',     x:620, y:250, color:'#d9a441', name:'BRASS'},
-  rust:      {key:'rust',      x:620, y:450, color:'#c1553b', name:'RUST'},
-  verdigris: {key:'verdigris', x:620, y:650, color:'#3fa08a', name:'VERDIGRIS'}
+  brass:     {key:'brass',     x:210, y:1152, color:'#e8c66a', name:'BRASS'},
+  rust:      {key:'rust',      x:378, y:1152, color:'#e5484d', name:'RUST'},
+  verdigris: {key:'verdigris', x:546, y:1152, color:'#2ee6a8', name:'VERDIGRIS'}
 };
 IL.SEGS = {
-  entryA:      {pts:[[-60,250],[180,250]], from:'entryA', to:'S1'},
-  entryB:      {pts:[[-60,650],[180,650]], from:'entryB', to:'S2'},
-  s1straight: {pts:[[180,250],[620,250]], from:'S1', to:'brass'},
-  s1div:       {pts:[[180,250],[190,330],[235,410],[300,440],[360,450]], from:'S1', to:'mid'},
-  s2straight: {pts:[[180,650],[620,650]], from:'S2', to:'verdigris'},
-  s2div:       {pts:[[180,650],[190,570],[235,490],[300,460],[360,450]], from:'S2', to:'mid'},
-  mid:         {pts:[[360,450],[540,450]], from:'mid', to:'S3'},
-  s3up:        {pts:[[540,450],[575,375],[620,250]], from:'S3', to:'brass'},
-  s3straight:  {pts:[[540,450],[620,450]], from:'S3', to:'rust'},
-  s3down:      {pts:[[540,450],[575,525],[620,650]], from:'S3', to:'verdigris'}
+  entryA:      {pts:[[210,-50],[210,426]], from:'entryA', to:'S1'},
+  entryB:      {pts:[[546,-50],[546,426]], from:'entryB', to:'S2'},
+  s1straight: {pts:[[210,426],[210,1152]], from:'S1', to:'brass'},
+  s1div:       {pts:[[210,426],[277,443],[344,517],[370,624],[378,723]], from:'S1', to:'mid'},
+  s2straight: {pts:[[546,426],[546,1152]], from:'S2', to:'verdigris'},
+  s2div:       {pts:[[546,426],[479,443],[412,517],[386,624],[378,723]], from:'S2', to:'mid'},
+  mid:         {pts:[[378,723],[378,1020]], from:'mid', to:'S3'},
+  s3up:        {pts:[[378,1020],[315,1078],[210,1152]], from:'S3', to:'brass'},
+  s3straight:  {pts:[[378,1020],[378,1152]], from:'S3', to:'rust'},
+  s3down:      {pts:[[378,1020],[441,1078],[546,1152]], from:'S3', to:'verdigris'}
 };
 IL.BRANCH = {
   S1: ['s1straight','s1div'],
@@ -552,7 +552,7 @@ var AU={
 /* ---------- canvas ---------- */
 var canvas=document.getElementById('game');
 var ctx=canvas.getContext('2d');
-var W=720, H=860;
+var W=720, H=1240;
 var reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 function strokePoly(g,pts){
@@ -588,18 +588,18 @@ function walkTies(g,pts){
 var staticC=document.createElement('canvas'); staticC.width=W; staticC.height=H;
 (function buildStatic(){
   var g=staticC.getContext('2d');
-  g.fillStyle='#101216'; g.fillRect(0,0,W,H);
+  g.fillStyle='#030d09'; g.fillRect(0,0,W,H);
   g.fillStyle='rgba(255,255,255,0.02)';
   for(var ry=40;ry<H;ry+=80) for(var rx=20;rx<W;rx+=80){ g.beginPath(); g.arc(rx,ry,2,0,7); g.fill(); }
   var keys=Object.keys(IL.SEGS);
   g.lineCap='round'; g.lineJoin='round';
   keys.forEach(function(k){
     var pts=IL.SEGS[k].pts;
-    g.strokeStyle='#22262d'; g.lineWidth=15; strokePoly(g,pts);
+    g.strokeStyle='#0a2016'; g.lineWidth=15; strokePoly(g,pts);
   });
-  g.strokeStyle='#17191e'; g.lineWidth=13;
+  g.strokeStyle='#06150d'; g.lineWidth=13;
   keys.forEach(function(k){ walkTies(g,IL.SEGS[k].pts); });
-  g.strokeStyle='#7d8590'; g.lineWidth=2.6;
+  g.strokeStyle='#a7c9b8'; g.lineWidth=2.6;
   keys.forEach(function(k){
     var pts=IL.SEGS[k].pts;
     strokePoly(g,offsetPoly(pts,5)); strokePoly(g,offsetPoly(pts,-5));
@@ -609,22 +609,22 @@ var staticC=document.createElement('canvas'); staticC.width=W; staticC.height=H;
     var p=IL.PLATFORMS[k];
     g.save(); g.translate(p.x,p.y);
     g.fillStyle=p.color; g.globalAlpha=0.9;
-    g.fillRect(-6,-26,12,52);
+    g.fillRect(-26,-6,52,12);
     g.globalAlpha=1; g.strokeStyle=p.color; g.lineWidth=3;
-    g.beginPath(); g.arc(0,-44,10,0,7); g.stroke();
+    g.beginPath(); g.arc(0,42,10,0,7); g.stroke();
     g.fillStyle=p.color;
-    if(k==='brass'){ g.beginPath(); g.arc(0,-44,5,0,7); g.fill(); }
-    else if(k==='rust'){ g.beginPath(); g.moveTo(0,-50); g.lineTo(6,-38); g.lineTo(-6,-38); g.closePath(); g.fill(); }
-    else { g.fillRect(-5,-49,10,10); }
-    g.font='bold 19px Georgia,serif'; g.textAlign='center';
-    g.fillText(p.name,0,-62);
+    if(k==='brass'){ g.beginPath(); g.arc(0,42,5,0,7); g.fill(); }
+    else if(k==='rust'){ g.beginPath(); g.moveTo(0,36); g.lineTo(6,48); g.lineTo(-6,48); g.closePath(); g.fill(); }
+    else { g.fillRect(-5,37,10,10); }
+    g.font='bold 19px system-ui,sans-serif'; g.textAlign='center';
+    g.fillText(p.name,0,72);
     g.restore();
   });
   /* entry labels */
-  g.font='bold 20px Georgia,serif'; g.textAlign='left'; g.fillStyle='#5a6068';
-  g.fillText('A',14,258); g.fillText('B',14,658);
-  g.font='15px Georgia,serif'; g.fillStyle='#3d4249';
-  g.fillText('YARD 7 - NIGHT AND DAY',14,830);
+  g.font='bold 20px system-ui,sans-serif'; g.textAlign='left'; g.fillStyle='#7fae97';
+  g.fillText('A',172,46); g.fillText('B',508,46);
+  g.font='15px system-ui,sans-serif'; g.fillStyle='#3f6b56';
+  g.fillText('YARD 7 - NIGHT AND DAY',14,1222);
 })();
 
 function branchAngle(swId,stateIdx){
@@ -702,13 +702,13 @@ function drainEvents(){
     else if(e.t==='pass'){ AU.click(); }
     else if(e.t==='arrive'){
       AU.chime(); var p=IL.trainPos(e.train);
-      burst(p.x,p.y,'#d9a441',10,90); popup(p.x,p.y-34,'+10','#d9a441');
+      burst(p.x,p.y,'#e8c66a',10,90); popup(p.x,p.y-34,'+10','#e8c66a');
     }
-    else if(e.t==='misroute'){ AU.buzz(); var p2=IL.trainPos(e.train); popup(p2.x,p2.y-34,'MISROUTED','#c1553b'); }
+    else if(e.t==='misroute'){ AU.buzz(); var p2=IL.trainPos(e.train); popup(p2.x,p2.y-34,'MISROUTED','#e5484d'); }
     else if(e.t==='wreck'){
       AU.clang(); addShake(0.5); var p3=IL.trainPos(e.train);
-      burst(p3.x,p3.y,'#ff7a2f',26,190); burst(p3.x,p3.y,'#3a3f47',14,120);
-      popup(p3.x,p3.y-40,'WRECK','#ff7a2f');
+      burst(p3.x,p3.y,'#ff8a3c',26,190); burst(p3.x,p3.y,'#3a3f47',14,120);
+      popup(p3.x,p3.y-40,'WRECK','#ff8a3c');
     }
     else if(e.t==='flip'){ AU.clunk(); }
     else if(e.t==='shiftEnd'){ endShift(); }
@@ -725,7 +725,7 @@ function canvasTap(cx,cy){
   var x=(cx-r.left)/r.width*W, y=(cy-r.top)/r.height*H;
   for(var i=0;i<IL.SWITCHES.length;i++){
     var sw=IL.SWITCHES[i];
-    if(Math.hypot(x-sw.x,y-sw.y)<48){
+    if(Math.hypot(x-sw.x,y-sw.y)<56){
       var before=G.sim.switches[sw.id];
       var res=IL.flip(G.sim,sw.id);
       if(res==='ok'){
@@ -756,8 +756,8 @@ function drawSwitch(g,sw,state,danger){
   /* active branch glow */
   var seg=IL.SEGS[IL.BRANCH[sw.id][state]];
   g.save();
-  g.strokeStyle='rgba(255,122,47,0.85)'; g.lineWidth=7; g.lineCap='round';
-  if(!reduced){ g.shadowColor='#ff7a2f'; g.shadowBlur=14; }
+  g.strokeStyle='rgba(46,230,168,0.85)'; g.lineWidth=7; g.lineCap='round';
+  if(!reduced){ g.shadowColor='#2ee6a8'; g.shadowBlur=14; }
   g.beginPath();
   var pts=seg.pts, acc=0;
   g.moveTo(pts[0][0]-sw.x,pts[0][1]-sw.y);
@@ -769,10 +769,10 @@ function drawSwitch(g,sw,state,danger){
   g.stroke(); g.restore();
   /* lever */
   g.fillStyle='#101216'; g.beginPath(); g.arc(0,0,20,0,7); g.fill();
-  g.strokeStyle='#d9a441'; g.lineWidth=3; g.beginPath(); g.arc(0,0,20,0,7); g.stroke();
-  g.strokeStyle='#d9a441'; g.lineWidth=6; g.lineCap='round';
+  g.strokeStyle='#2ee6a8'; g.lineWidth=3; g.beginPath(); g.arc(0,0,20,0,7); g.stroke();
+  g.strokeStyle='#2ee6a8'; g.lineWidth=6; g.lineCap='round';
   g.beginPath(); g.moveTo(0,0); g.lineTo(Math.cos(ang)*16,Math.sin(ang)*16); g.stroke();
-  g.fillStyle='#ff7a2f'; g.beginPath(); g.arc(Math.cos(ang)*16,Math.sin(ang)*16,4,0,7); g.fill();
+  g.fillStyle='#2ee6a8'; g.beginPath(); g.arc(Math.cos(ang)*16,Math.sin(ang)*16,4,0,7); g.fill();
   g.restore();
 }
 function drawSigil(g,k,x,y,r,color){
@@ -786,16 +786,16 @@ function drawTrain(g,t){
   var pl=IL.PLATFORMS[t.dest];
   g.save(); g.translate(p.x,p.y); g.rotate(p.ang);
   g.fillStyle='rgba(0,0,0,0.45)'; g.fillRect(-24,-10,50,26);
-  g.fillStyle='#23262c';
+  g.fillStyle='#0d2b1e';
   g.beginPath();
   if(g.roundRect) g.roundRect(-23,-12,46,24,6); else g.rect(-23,-12,46,24);
   g.fill();
-  g.strokeStyle='#4a5058'; g.lineWidth=2; g.stroke();
+  g.strokeStyle='#1f5c40'; g.lineWidth=2; g.stroke();
   g.fillStyle=pl.color; g.fillRect(-23,-12,10,24);
   drawSigil(g,t.dest,8,0,11,'rgba(255,255,255,0.92)');
   g.fillStyle='#ffe9b0'; g.beginPath(); g.arc(24,0,3.5,0,7); g.fill();
   g.restore();
-  g.font='bold 17px Georgia,serif'; g.textAlign='center';
+  g.font='bold 17px system-ui,sans-serif'; g.textAlign='center';
   g.fillStyle='rgba(0,0,0,0.6)'; g.fillText(pl.name,p.x+1,p.y-21);
   g.fillStyle=pl.color; g.fillText(pl.name,p.x,p.y-22);
 }
@@ -829,7 +829,7 @@ function render(){
   });
   ctx.globalAlpha=1;
   /* popups */
-  ctx.textAlign='center'; ctx.font='bold 20px Georgia,serif';
+  ctx.textAlign='center'; ctx.font='bold 20px system-ui,sans-serif';
   G.popups.forEach(function(p){
     ctx.globalAlpha=Math.min(1,p.life);
     ctx.fillStyle=p.color; ctx.fillText(p.text,p.x,p.y);
